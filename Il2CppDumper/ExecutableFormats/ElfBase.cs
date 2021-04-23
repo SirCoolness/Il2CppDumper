@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace Il2CppDumper
@@ -12,13 +12,14 @@ namespace Il2CppDumper
 
         public void GetDumpAddress()
         {
-            Console.WriteLine("Detected this may be a dump file.");
-            Console.WriteLine("Input il2cpp dump address or input 0 to force continue:");
-            DumpAddr = Convert.ToUInt64(Console.ReadLine(), 16);
-            if (DumpAddr != 0)
-            {
-                IsDumped = true;
-            }
+            Console.WriteLine("Detected this may be a dump file. Unsupported");
+            IsDumped = false;
+            //Console.WriteLine("Input il2cpp dump address or input 0 to force continue:");
+            //DumpAddr = Convert.ToUInt64(Console.ReadLine(), 16);
+            //if (DumpAddr != 0)
+            //{
+            //    IsDumped = true;
+            //}
         }
     }
 }

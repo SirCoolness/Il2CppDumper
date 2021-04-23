@@ -1,133 +1,165 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json;
-#if NETFRAMEWORK
-using System.Windows.Forms;
-#endif
+//#if NETFRAMEWORK
+//using System.Windows.Forms;
+//#endif
 
 namespace Il2CppDumper
 {
-    class Program
+    public class Console
     {
-        private static Config config;
+        public static event Action<string> LogHandler;
 
-        [STAThread]
-        static void Main(string[] args)
+        public static void WriteLine()
         {
-            config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + @"config.json"));
-            string il2cppPath = null;
-            string metadataPath = null;
-            string outputDir = null;
-
-            if (args.Length == 1)
-            {
-                if (args[0] == "-h" || args[0] == "--help" || args[0] == "/?" || args[0] == "/h")
-                {
-                    ShowHelp();
-                    return;
-                }
-            }
-            if (args.Length > 3)
-            {
-                ShowHelp();
-                return;
-            }
-            if (args.Length > 1)
-            {
-                foreach (var arg in args)
-                {
-                    if (File.Exists(arg))
-                    {
-                        var file = File.ReadAllBytes(arg);
-                        if (BitConverter.ToUInt32(file, 0) == 0xFAB11BAF)
-                        {
-                            metadataPath = arg;
-                        }
-                        else
-                        {
-                            il2cppPath = arg;
-                        }
-                    }
-                    else if (Directory.Exists(arg))
-                    {
-                        outputDir = Path.GetFullPath(arg) + Path.DirectorySeparatorChar;
-                    }
-                }
-            }
-            if (outputDir == null)
-            {
-                outputDir = AppDomain.CurrentDomain.BaseDirectory;
-            }
-#if NETFRAMEWORK
-            if (il2cppPath == null)
-            {
-                var ofd = new OpenFileDialog();
-                ofd.Filter = "Il2Cpp binary file|*.*";
-                if (ofd.ShowDialog() == DialogResult.OK)
-                {
-                    il2cppPath = ofd.FileName;
-                    ofd.Filter = "global-metadata|global-metadata.dat";
-                    if (ofd.ShowDialog() == DialogResult.OK)
-                    {
-                        metadataPath = ofd.FileName;
-                    }
-                    else
-                    {
-                        return;
-                    }
-                }
-                else
-                {
-                    return;
-                }
-            }
-#endif
-            if (il2cppPath == null)
-            {
-                ShowHelp();
-                return;
-            }
-            if (metadataPath == null)
-            {
-                Console.WriteLine($"ERROR: Metadata file not found or encrypted.");
-            }
-            else
-            {
-                try
-                {
-                    if (Init(il2cppPath, metadataPath, out var metadata, out var il2Cpp))
-                    {
-                        Dump(metadata, il2Cpp, outputDir);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                }
-            }
-            if (config.RequireAnyKey)
-            {
-                Console.WriteLine("Press any key to exit...");
-                Console.ReadKey(true);
-            }
+            LogHandler.Invoke("");
         }
+
+        public static void WriteLine(string msg)
+        {
+            LogHandler.Invoke(msg);
+        }
+        public static void WriteLine(string msg, object arg0)
+        {
+            LogHandler.Invoke(string.Format(msg, arg0));
+        }
+
+        public static void WriteLine(Exception msg)
+        {
+            LogHandler.Invoke(msg.ToString());
+        }
+
+        public static void Write(string msg)
+        {
+            LogHandler.Invoke(msg);
+        }
+    }
+
+    public class Program
+    {
+        public static Config config;
+
+//        [STAThread]
+//        static void Main(string[] args)
+//        {
+//            config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + @"config.json"));
+//            string il2cppPath = null;
+//            string metadataPath = null;
+//            string outputDir = null;
+
+//            if (args.Length == 1)
+//            {
+//                if (args[0] == "-h" || args[0] == "--help" || args[0] == "/?" || args[0] == "/h")
+//                {
+//                    ShowHelp();
+//                    return;
+//                }
+//            }
+//            if (args.Length > 3)
+//            {
+//                ShowHelp();
+//                return;
+//            }
+//            if (args.Length > 1)
+//            {
+//                foreach (var arg in args)
+//                {
+//                    if (File.Exists(arg))
+//                    {
+//                        var file = File.ReadAllBytes(arg);
+//                        if (BitConverter.ToUInt32(file, 0) == 0xFAB11BAF)
+//                        {
+//                            metadataPath = arg;
+//                        }
+//                        else
+//                        {
+//                            il2cppPath = arg;
+//                        }
+//                    }
+//                    else if (Directory.Exists(arg))
+//                    {
+//                        outputDir = Path.GetFullPath(arg) + Path.DirectorySeparatorChar;
+//                    }
+//                }
+//            }
+//            if (outputDir == null)
+//            {
+//                outputDir = AppDomain.CurrentDomain.BaseDirectory;
+//            }
+////#if NETFRAMEWORK
+////            if (il2cppPath == null)
+////            {
+////                var ofd = new OpenFileDialog();
+////                ofd.Filter = "Il2Cpp binary file|*.*";
+////                if (ofd.ShowDialog() == DialogResult.OK)
+////                {
+////                    il2cppPath = ofd.FileName;
+////                    ofd.Filter = "global-metadata|global-metadata.dat";
+////                    if (ofd.ShowDialog() == DialogResult.OK)
+////                    {
+////                        metadataPath = ofd.FileName;
+////                    }
+////                    else
+////                    {
+////                        return;
+////                    }
+////                }
+////                else
+////                {
+////                    return;
+////                }
+////            }
+////#endif
+//            if (il2cppPath == null)
+//            {
+//                ShowHelp();
+//                return;
+//            }
+//            if (metadataPath == null)
+//            {
+//                Console.WriteLine($"ERROR: Metadata file not found or encrypted.");
+//            }
+//            else
+//            {
+//                try
+//                {
+//                    if (Init(il2cppPath, metadataPath, out var metadata, out var il2Cpp))
+//                    {
+//                        Dump(metadata, il2Cpp, outputDir);
+//                    }
+//                }
+//                catch (Exception e)
+//                {
+//                    Console.WriteLine(e);
+//                }
+//            }
+//            if (config.RequireAnyKey)
+//            {
+//                Console.WriteLine("Press any key to exit...");
+//                Console.ReadKey(true);
+//            }
+//        }
 
         static void ShowHelp()
         {
             Console.WriteLine($"usage: {AppDomain.CurrentDomain.FriendlyName} <executable-file> <global-metadata> <output-directory>");
         }
 
-        private static bool Init(string il2cppPath, string metadataPath, out Metadata metadata, out Il2Cpp il2Cpp)
+        public static bool Init(string il2cppPath, string metadataPath, out Metadata metadata, out Il2Cpp il2Cpp)
         {
             Console.WriteLine("Initializing metadata...");
             var metadataBytes = File.ReadAllBytes(metadataPath);
             metadata = new Metadata(new MemoryStream(metadataBytes));
             Console.WriteLine($"Metadata Version: {metadata.Version}");
 
+            Console.Write($"{il2cppPath} {metadataPath}");
+
             Console.WriteLine("Initializing il2cpp file...");
             var il2cppBytes = File.ReadAllBytes(il2cppPath);
+            Console.WriteLine(il2cppBytes.Length.ToString());
             var il2cppMagic = BitConverter.ToUInt32(il2cppBytes, 0);
             var il2CppMemory = new MemoryStream(il2cppBytes);
             switch (il2cppMagic)
@@ -155,25 +187,25 @@ namespace Il2CppDumper
                         il2Cpp = new Elf(il2CppMemory);
                     }
                     break;
-                case 0xCAFEBABE: //FAT Mach-O
-                case 0xBEBAFECA:
-                    var machofat = new MachoFat(new MemoryStream(il2cppBytes));
-                    Console.Write("Select Platform: ");
-                    for (var i = 0; i < machofat.fats.Length; i++)
-                    {
-                        var fat = machofat.fats[i];
-                        Console.Write(fat.magic == 0xFEEDFACF ? $"{i + 1}.64bit " : $"{i + 1}.32bit ");
-                    }
-                    Console.WriteLine();
-                    var key = Console.ReadKey(true);
-                    var index = int.Parse(key.KeyChar.ToString()) - 1;
-                    var magic = machofat.fats[index % 2].magic;
-                    il2cppBytes = machofat.GetMacho(index % 2);
-                    il2CppMemory = new MemoryStream(il2cppBytes);
-                    if (magic == 0xFEEDFACF)
-                        goto case 0xFEEDFACF;
-                    else
-                        goto case 0xFEEDFACE;
+                //case 0xCAFEBABE: //FAT Mach-O
+                //case 0xBEBAFECA:
+                //    var machofat = new MachoFat(new MemoryStream(il2cppBytes));
+                //    Console.Write("Select Platform: ");
+                //    for (var i = 0; i < machofat.fats.Length; i++)
+                //    {
+                //        var fat = machofat.fats[i];
+                //        Console.Write(fat.magic == 0xFEEDFACF ? $"{i + 1}.64bit " : $"{i + 1}.32bit ");
+                //    }
+                //    Console.WriteLine();
+                //    var key = Console.ReadKey(true);
+                //    var index = int.Parse(key.KeyChar.ToString()) - 1;
+                //    var magic = machofat.fats[index % 2].magic;
+                //    il2cppBytes = machofat.GetMacho(index % 2);
+                //    il2CppMemory = new MemoryStream(il2cppBytes);
+                //    if (magic == 0xFEEDFACF)
+                //        goto case 0xFEEDFACF;
+                //    else
+                //        goto case 0xFEEDFACE;
                 case 0xFEEDFACF: // 64bit Mach-O
                     il2Cpp = new Macho64(il2CppMemory);
                     break;
@@ -184,11 +216,11 @@ namespace Il2CppDumper
             var version = config.ForceIl2CppVersion ? config.ForceVersion : metadata.Version;
             il2Cpp.SetProperties(version, metadata.maxMetadataUsages);
             Console.WriteLine($"Il2Cpp Version: {il2Cpp.Version}");
-            if (il2Cpp.Version >= 27 && il2Cpp is ElfBase elf && elf.IsDumped)
-            {
-                Console.WriteLine("Input global-metadata.dat dump address:");
-                metadata.Address = Convert.ToUInt64(Console.ReadLine(), 16);
-            }
+            //if (il2Cpp.Version >= 27 && il2Cpp is ElfBase elf && elf.IsDumped)
+            //{
+            //    Console.WriteLine("Input global-metadata.dat dump address:");
+            //    metadata.Address = Convert.ToUInt64(Console.ReadLine(), 16);
+            //}
 
 
             Console.WriteLine("Searching...");
@@ -215,13 +247,14 @@ namespace Il2CppDumper
                 }
                 if (!flag)
                 {
-                    Console.WriteLine("ERROR: Can't use auto mode to process file, try manual mode.");
-                    Console.Write("Input CodeRegistration: ");
-                    var codeRegistration = Convert.ToUInt64(Console.ReadLine(), 16);
-                    Console.Write("Input MetadataRegistration: ");
-                    var metadataRegistration = Convert.ToUInt64(Console.ReadLine(), 16);
-                    il2Cpp.Init(codeRegistration, metadataRegistration);
-                    return true;
+                    Console.WriteLine("ERROR: Can't use auto mode to process file, aand manual mode is not available.");
+                    return false;
+                    //Console.Write("Input CodeRegistration: ");
+                    //var codeRegistration = Convert.ToUInt64(Console.ReadLine(), 16);
+                    //Console.Write("Input MetadataRegistration: ");
+                    //var metadataRegistration = Convert.ToUInt64(Console.ReadLine(), 16);
+                    //il2Cpp.Init(codeRegistration, metadataRegistration);
+                    //return true;
                 }
             }
             catch (Exception e)
@@ -233,7 +266,7 @@ namespace Il2CppDumper
             return true;
         }
 
-        private static void Dump(Metadata metadata, Il2Cpp il2Cpp, string outputDir)
+        public static void Dump(Metadata metadata, Il2Cpp il2Cpp, string outputDir)
         {
             Console.WriteLine("Dumping...");
             var executor = new Il2CppExecutor(metadata, il2Cpp);

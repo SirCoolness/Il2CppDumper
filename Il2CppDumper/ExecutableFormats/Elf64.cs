@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -17,6 +17,7 @@ namespace Il2CppDumper
 
         public Elf64(Stream stream) : base(stream)
         {
+            Console.WriteLine("elf64");
             elfHeader = ReadClass<Elf64_Ehdr>();
             programSegment = ReadClassArray<Elf64_Phdr>(elfHeader.e_phoff, elfHeader.e_phnum);
             if (!CheckSection())
